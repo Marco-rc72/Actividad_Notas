@@ -62,6 +62,15 @@
       </div>
       
 
+      <p class="text-lg font-semibold text-gray-900">Total de notas: {{ totalNotas }}</p>
+      <div class="mb-6">
+  <h3 class="text-lg font-semibold text-gray-900">Notas por etiqueta:</h3>
+  <ul>
+    <li v-for="(count, tag) in totalNotasPorEtiqueta" :key="tag" class="text-gray-600">
+      {{ tag }}: {{ count }}
+    </li>
+  </ul>
+</div>
       <!-- Formulario para agregar notas -->
       <FormularioNotas 
         @submit="handleSubmit" 
@@ -207,6 +216,11 @@ const clearNotesByTag = (tag) => {
     etiquetaFiltro.value = ''
   }
 }
+
+const { totalNotas } = storeToRefs( notasStore )
+
+const { totalNotasPorEtiqueta} = storeToRefs( notasStore )
+
 
 
 </script>

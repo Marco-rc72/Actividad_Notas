@@ -44,7 +44,6 @@ export const useNotasStore = defineStore('notas', () => {
     }
   }
 
-  const NotesTotal = 
 
   watch(
     notas,
@@ -97,6 +96,20 @@ const LimpiarNotasPorEtiqueta = (tag:string) => {
     localStorage.setItem('notas', JSON.stringify(notas.value));
   };
 
+//Total de notas
+const totalNotas = computed (()=> notas.value.length)
+
+//Total de notas por etiqueta
+const totalNotasPorEtiqueta = computed(() => {
+  const counts: Record<string, number> = {}
+
+  notas.value.forEach((nota) => {
+    const tag = nota.tag || 'Sin etiqueta' 
+    counts[tag] = (counts[tag] || 0) + 1
+  })
+
+  return counts
+})
 
 
   return{
@@ -114,5 +127,7 @@ const LimpiarNotasPorEtiqueta = (tag:string) => {
     GuardarNotas,
     LimpiarTodasLasNotas,
     LimpiarNotasPorEtiqueta,
+    totalNotas,
+    totalNotasPorEtiqueta,
   } 
 })
