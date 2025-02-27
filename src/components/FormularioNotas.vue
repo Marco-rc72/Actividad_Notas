@@ -1,6 +1,7 @@
 <template>
   <form @submit.prevent="handleSubmit" class="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
     <div class="space-y-4">
+      <!-- Campos de título y descripción -->
       <input 
         id="title"
         v-model="form.title"
@@ -19,6 +20,7 @@
         required
       />
 
+      <!-- Selector de estado -->
       <select 
         id="status"
         v-model="form.status"
@@ -29,28 +31,35 @@
         <option value="Completada">Completada</option>
       </select>
 
-      <!-- Select para etiquetas predeterminadas -->
-      <select 
-        v-model="selectedTag"
-        @change="handleTagChange"
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-      >
-        <option value="Personal">Personal</option>
-        <option value="Urgente">Urgente</option>
-        <option value="Trabajo">Trabajo</option>
-        <option value="Otra">Otra...</option>
-        
-      </select>
+      <!-- Selector de etiquetas -->
+      <div>
+        <label for="tags" class="block text-sm font-medium text-gray-700">Etiquetas:</label>
+        <select 
+          id="tags"
+          v-model="selectedTags"
+          multiple
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+        >
+          <option value="Trabajo">Trabajo</option>
+          <option value="Personal">Personal</option>
+          <option value="Urgente">Urgente</option>
+          <option value="Otra">Otra...</option>
+        </select>
+      </div>
 
       <!-- Input para etiqueta personalizada -->
-      <input 
-        v-if="showCustomTagInput"
-        v-model="customTag"
-        type="text"
-        placeholder="Escribe tu etiqueta personalizada"
-        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-      />
+      <div v-if="showCustomTagInput">
+        <label for="customTag" class="block text-sm font-medium text-gray-700">Etiqueta personalizada:</label>
+        <input 
+          id="customTag"
+          v-model="customTag"
+          type="text"
+          placeholder="Escribe tu etiqueta personalizada"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+        />
+      </div>
 
+      <!-- Botones de acción -->
       <div class="flex justify-end space-x-3">
         <button 
           type="button" 
@@ -75,7 +84,6 @@
 import { reactive, ref, computed, watch } from 'vue'
 import type { Notas } from '@/interfaces/Types'
 
-// Define las props y emits
 const props = defineProps<{
   notaAEditar: Notas | null
 }>()
@@ -87,7 +95,7 @@ const initialForm = {
   title: '',
   description: '',
   status: 'Iniciada' as const,
-  tag: 'Trabajo' as const, // Campo de etiqueta
+  tags: [] as string[], // Cambia a un array de strings
   dueDate: new Date(), 
   completed: false,
   createdAt: new Date(),
@@ -96,7 +104,7 @@ const initialForm = {
 const form = reactive({ ...initialForm })
 
 // Lógica para manejar etiquetas
-const selectedTag = ref('Trabajo') // Etiqueta seleccionada en el <select>
+const selectedTags = ref<string[]>([]) // Etiquetas seleccionadas en el <select>
 const customTag = ref('') // Etiqueta personalizada
 const showCustomTagInput = ref(false) // Mostrar/ocultar el input personalizado
 
@@ -104,28 +112,21 @@ const showCustomTagInput = ref(false) // Mostrar/ocultar el input personalizado
 watch(() => props.notaAEditar, (nota) => {
   if (nota) {
     Object.assign(form, { ...nota })
-    if (['Trabajo', 'Personal', 'Urgente'].includes(nota.tag)) {
-      selectedTag.value = nota.tag
-      showCustomTagInput.value = false
-    } else {
-      selectedTag.value = 'Otra'
-      customTag.value = nota.tag
-      showCustomTagInput.value = true
-    }
+    selectedTags.value = nota.tags
+    showCustomTagInput.value = nota.tags.some(tag => !['Trabajo', 'Personal', 'Urgente'].includes(tag))
   } else {
     resetForm()
   }
 })
 
-const handleTagChange = () => {
-  if (selectedTag.value === 'Otra') {
+// Manejar cambios en las etiquetas seleccionadas
+watch(selectedTags, (newTags) => {
+  if (newTags.includes('Otra')) {
     showCustomTagInput.value = true
-    form.tag = '' // Reiniciar la etiqueta del formulario
   } else {
     showCustomTagInput.value = false
-    form.tag = selectedTag.value // Usar la etiqueta seleccionada
   }
-}
+})
 
 // Validación del formulario
 const isFormValid = computed(() => {
@@ -138,9 +139,11 @@ const handleSubmit = () => {
     return
   }
 
-  // Si se seleccionó "Otra..." y se escribió una etiqueta personalizada
-  if (selectedTag.value === 'Otra' && customTag.value.trim() !== '') {
-    form.tag = customTag.value
+  // Si se seleccionó "Otra" y se escribió una etiqueta personalizada
+  if (selectedTags.value.includes('Otra') && customTag.value.trim() !== '') {
+    form.tags = [...selectedTags.value.filter(tag => tag !== 'Otra'), customTag.value]
+  } else {
+    form.tags = selectedTags.value
   }
 
   // Emitir el evento "submit" con los datos del formulario
@@ -152,7 +155,7 @@ const handleSubmit = () => {
 
 const resetForm = () => {
   Object.assign(form, initialForm)
-  selectedTag.value = 'Trabajo'
+  selectedTags.value = []
   customTag.value = ''
   showCustomTagInput.value = false
   emit('reset-edicion')

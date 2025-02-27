@@ -24,13 +24,13 @@ export const useNotasStore = defineStore('notas', () => {
     }
   }
 
-  function AñadirNota(nota: Omit<Notas, 'id'| 'createdAt'>){
+  function AñadirNota(nota: Omit<Notas, 'id' | 'createdAt'>) {
     const NuevaNota: Notas = {
       ...nota,
       id: crypto.randomUUID(),
       createdAt: new Date(),
-    }
-    notas.value.push(NuevaNota)
+    };
+    notas.value.push(NuevaNota);
   }
 
   function eliminarNota(id: string) {
@@ -38,9 +38,9 @@ export const useNotasStore = defineStore('notas', () => {
   }
 
   function editarNota(notaActualizada: Notas) {
-    const index = notas.value.findIndex(nota => nota.id === notaActualizada.id)
+    const index = notas.value.findIndex(nota => nota.id === notaActualizada.id);
     if (index !== -1) {
-      notas.value[index] = notaActualizada
+      notas.value[index] = notaActualizada;
     }
   }
 
@@ -65,9 +65,9 @@ const NotasOrdenadas = computed(() => {
 
 
 //Filtro de Notas por etiqueta
-const FiltrarNotasPorEtiqueta = (tag:string) => {
+const FiltrarNotasPorEtiqueta = (tag: string) => {
   if (!tag) return NotasOrdenadas.value;
-  return NotasOrdenadas.value.filter((notas) => notas.tag.includes(tag));
+  return NotasOrdenadas.value.filter((notas) => notas.tags.includes(tag));
 }
 
 //Filtrar Notas por el estado
@@ -84,10 +84,9 @@ const LimpiarTodasLasNotas = () =>{
 
 
 //Limpiar notas por etiqueta
-const LimpiarNotasPorEtiqueta = (tag:string) => {
-  notas.value = notas.value.filter((notas) => !notas.tag.includes(tag));
+const LimpiarNotasPorEtiqueta = (tag: string) => {
+  notas.value = notas.value.filter((notas) => !notas.tags.includes(tag));
   GuardarNotas();
-
 }
 
 
@@ -101,15 +100,16 @@ const totalNotas = computed (()=> notas.value.length)
 
 //Total de notas por etiqueta
 const totalNotasPorEtiqueta = computed(() => {
-  const counts: Record<string, number> = {}
+  const counts: Record<string, number> = {};
 
   notas.value.forEach((nota) => {
-    const tag = nota.tag || 'Sin etiqueta' 
-    counts[tag] = (counts[tag] || 0) + 1
-  })
+    nota.tags.forEach((tag) => {
+      counts[tag] = (counts[tag] || 0) + 1;
+    });
+  });
 
-  return counts
-})
+  return counts;
+});
 
 
   return{
